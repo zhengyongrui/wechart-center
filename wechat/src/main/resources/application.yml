@@ -1,0 +1,16 @@
+info:
+  app_name: 娱乐服务
+  author: 牙子
+  email: zyr@outlook.com
+server:
+  port: 8211
+spring:
+  application:
+    name: wechat-center
+  profiles:
+    #启动的默认配置
+    active: common, prod
+logging:
+  level:
+    com.github.binarywang.demo.wx.miniapp: debug
+    cn.binarywang.wx.miniapp: debug
