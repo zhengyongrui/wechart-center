@@ -10,6 +10,9 @@ import cn.binarywang.wx.miniapp.message.WxMaMessageHandler;
 import cn.binarywang.wx.miniapp.message.WxMaMessageRouter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.zyr.wechat.setting.config.domain.po.WechatConfig;
+import com.zyr.wechat.setting.config.service.IWechatConfigService;
+import lombok.RequiredArgsConstructor;
 import me.chanjar.weixin.common.bean.result.WxMediaUploadResult;
 import me.chanjar.weixin.common.error.WxErrorException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,20 +27,26 @@ import java.util.stream.Collectors;
 
 /**
  * spring初始化微信配置
+ *
+ * @author zhengyongrui
  */
 @Configuration
 @EnableConfigurationProperties(WxMaProperties.class)
 public class WxMaConfiguration {
 
-    private WxMaProperties properties;
-
     private static Map<String, WxMaMessageRouter> routers = Maps.newHashMap();
+
     private static Map<String, WxMaService> maServices = Maps.newHashMap();
 
     @Autowired
-    public WxMaConfiguration(WxMaProperties properties) {
+    public WxMaConfiguration(WxMaProperties properties, IWechatConfigService wechatConfigService) {
         this.properties = properties;
+        this.wechatConfigService = wechatConfigService;
     }
+
+    private WxMaProperties properties;
+
+    private IWechatConfigService wechatConfigService;
 
     public static WxMaService getMaService(String appid) {
         WxMaService wxService = maServices.get(appid);
@@ -53,73 +62,73 @@ public class WxMaConfiguration {
 
     @PostConstruct
     public void init() {
-        List<WxMaProperties.Config> configs = this.properties.getConfigs();
-        if (configs == null) {
-            throw new IllegalArgumentException("大哥，拜托先看下项目首页的说明（readme文件），添加下相关配置，注意别配错了！");
+        List<WechatConfig> propertiesWechatConfigs = wechatConfigService.syncAndFindAllWechatConfig(this.properties.getConfigs());
+        if (propertiesWechatConfigs == null) {
+            throw new IllegalArgumentException("无法获取到对应到config值，检查com.zyr.wechat.miniapp.config.WxMaProperties对应到application.yml的wx.miniapp配置信息");
         }
 
-        maServices = configs.stream()
-            .map(a -> {
-                WxMaDefaultConfigImpl config = new WxMaDefaultConfigImpl();
-                config.setAppid(a.getAppid());
-                config.setSecret(a.getSecret());
-                config.setToken(a.getToken());
-                config.setAesKey(a.getAesKey());
-                config.setMsgDataFormat(a.getMsgDataFormat());
+        maServices = propertiesWechatConfigs.stream()
+                .map(propertiesWechatConfig -> {
+                    WxMaDefaultConfigImpl config = new WxMaDefaultConfigImpl();
+                    config.setAppid(propertiesWechatConfig.getAppid());
+                    config.setSecret(propertiesWechatConfig.getSecret());
+                    config.setToken(propertiesWechatConfig.getToken());
+                    config.setAesKey(propertiesWechatConfig.getAesKey());
+                    config.setMsgDataFormat(propertiesWechatConfig.getMsgDataFormat());
 
-                WxMaService service = new WxMaServiceImpl();
-                service.setWxMaConfig(config);
-                routers.put(a.getAppid(), this.newRouter(service));
-                return service;
-            }).collect(Collectors.toMap(s -> s.getWxMaConfig().getAppid(), a -> a));
+                    WxMaService service = new WxMaServiceImpl();
+                    service.setWxMaConfig(config);
+                    routers.put(propertiesWechatConfig.getAppid(), this.newRouter(service));
+                    return service;
+                }).collect(Collectors.toMap(s -> s.getWxMaConfig().getAppid(), a -> a));
     }
 
     private WxMaMessageRouter newRouter(WxMaService service) {
         final WxMaMessageRouter router = new WxMaMessageRouter(service);
         router
-            .rule().handler(logHandler).next()
-            .rule().async(false).content("模板").handler(templateMsgHandler).end()
-            .rule().async(false).content("文本").handler(textHandler).end()
-            .rule().async(false).content("图片").handler(picHandler).end()
-            .rule().async(false).content("二维码").handler(qrcodeHandler).end();
+                .rule().handler(logHandler).next()
+                .rule().async(false).content("模板").handler(templateMsgHandler).end()
+                .rule().async(false).content("文本").handler(textHandler).end()
+                .rule().async(false).content("图片").handler(picHandler).end()
+                .rule().async(false).content("二维码").handler(qrcodeHandler).end();
         return router;
     }
 
     private final WxMaMessageHandler templateMsgHandler = (wxMessage, context, service, sessionManager) -> {
         service.getMsgService().sendTemplateMsg(WxMaTemplateMessage.builder()
-            .templateId("此处更换为自己的模板id")
-            .formId("自己替换可用的formid")
-            .data(Lists.newArrayList(
-                new WxMaTemplateData("keyword1", "339208499", "#173177")))
-            .toUser(wxMessage.getFromUser())
-            .build());
+                .templateId("此处更换为自己的模板id")
+                .formId("自己替换可用的formid")
+                .data(Lists.newArrayList(
+                        new WxMaTemplateData("keyword1", "339208499", "#173177")))
+                .toUser(wxMessage.getFromUser())
+                .build());
         return null;
     };
 
     private final WxMaMessageHandler logHandler = (wxMessage, context, service, sessionManager) -> {
         System.out.println("收到消息：" + wxMessage.toString());
         service.getMsgService().sendKefuMsg(WxMaKefuMessage.newTextBuilder().content("收到信息为：" + wxMessage.toJson())
-            .toUser(wxMessage.getFromUser()).build());
+                .toUser(wxMessage.getFromUser()).build());
         return null;
     };
 
     private final WxMaMessageHandler textHandler = (wxMessage, context, service, sessionManager) -> {
         service.getMsgService().sendKefuMsg(WxMaKefuMessage.newTextBuilder().content("回复文本消息")
-            .toUser(wxMessage.getFromUser()).build());
+                .toUser(wxMessage.getFromUser()).build());
         return null;
     };
 
     private final WxMaMessageHandler picHandler = (wxMessage, context, service, sessionManager) -> {
         try {
             WxMediaUploadResult uploadResult = service.getMediaService()
-                .uploadMedia("image", "png",
-                    ClassLoader.getSystemResourceAsStream("tmp.png"));
+                    .uploadMedia("image", "png",
+                            ClassLoader.getSystemResourceAsStream("tmp.png"));
             service.getMsgService().sendKefuMsg(
-                WxMaKefuMessage
-                    .newImageBuilder()
-                    .mediaId(uploadResult.getMediaId())
-                    .toUser(wxMessage.getFromUser())
-                    .build());
+                    WxMaKefuMessage
+                            .newImageBuilder()
+                            .mediaId(uploadResult.getMediaId())
+                            .toUser(wxMessage.getFromUser())
+                            .build());
         } catch (WxErrorException e) {
             e.printStackTrace();
         }
@@ -132,11 +141,11 @@ public class WxMaConfiguration {
             final File file = service.getQrcodeService().createQrcode("123", 430);
             WxMediaUploadResult uploadResult = service.getMediaService().uploadMedia("image", file);
             service.getMsgService().sendKefuMsg(
-                WxMaKefuMessage
-                    .newImageBuilder()
-                    .mediaId(uploadResult.getMediaId())
-                    .toUser(wxMessage.getFromUser())
-                    .build());
+                    WxMaKefuMessage
+                            .newImageBuilder()
+                            .mediaId(uploadResult.getMediaId())
+                            .toUser(wxMessage.getFromUser())
+                            .build());
         } catch (WxErrorException e) {
             e.printStackTrace();
         }
