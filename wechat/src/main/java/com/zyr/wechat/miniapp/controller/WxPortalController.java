@@ -15,6 +15,7 @@ import java.util.Objects;
 
 /**
  * 微信服务认证
+ * @author zhengyongrui
  */
 @RestController
 @Slf4j

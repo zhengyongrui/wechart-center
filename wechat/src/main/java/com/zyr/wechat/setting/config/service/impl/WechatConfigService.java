@@ -35,4 +35,9 @@ public class WechatConfigService implements IWechatConfigService {
         resultList.addAll(newWechatConfigList);
         return resultList;
     }
+
+    @Override
+    public WechatConfig findByAppid(String appid) {
+        return wechatConfigDao.findById(appid).orElse(null);
+    }
 }

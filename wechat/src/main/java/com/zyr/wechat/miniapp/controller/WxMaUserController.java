@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 微信小程序用户接口
+ * @author zhengyongrui
  */
 @RestController
 @RequestMapping("/wx/user/{appid}")
@@ -39,9 +40,7 @@ public class WxMaUserController {
     }
 
     /**
-     * <pre>
      * 获取用户信息接口
-     * </pre>
      */
     @GetMapping("/info")
     public String info(
@@ -66,9 +65,7 @@ public class WxMaUserController {
     }
 
     /**
-     * <pre>
      * 获取用户绑定手机号信息
-     * </pre>
      */
     @GetMapping("/phone")
     public String phone(@PathVariable String appid, String sessionKey, String signature,

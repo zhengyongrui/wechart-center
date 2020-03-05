@@ -18,4 +18,5 @@ public interface IWechatConfigService {
      */
     List<WechatConfig> syncAndFindAllWechatConfig(List<WxMaProperties.Config> propertiesConfigList);
 
+    WechatConfig findByAppid(String appid);
 }
