@@ -1,16 +1,14 @@
-package com.zyr.wechat.user.domain.dto;
+package com.zyr.wechat.user.domain.vo;
 
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 
 /**
- * 微信用户信息
- *
  * @Author: zhengyongrui
- * @Date: 2020-03-04 22:33
+ * @Date: 2020-03-07 23:53
  */
 @Data
-public class WechatUserDto {
+public class WechatUserVo {
 
     @Id
     private String openId;
@@ -60,4 +58,5 @@ public class WechatUserDto {
      * 账户中心对应的用户id
      */
     private String userId;
+
 }

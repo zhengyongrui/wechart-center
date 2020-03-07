@@ -20,7 +20,6 @@ import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -136,7 +135,6 @@ public class WxMaConfiguration {
         } catch (WxErrorException e) {
             e.printStackTrace();
         }
-
         return null;
     };
 
@@ -153,7 +151,6 @@ public class WxMaConfiguration {
         } catch (WxErrorException e) {
             e.printStackTrace();
         }
-
         return null;
     };
 

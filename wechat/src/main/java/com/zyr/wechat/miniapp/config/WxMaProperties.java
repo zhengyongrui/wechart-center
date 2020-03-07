@@ -7,6 +7,8 @@ import java.util.List;
 
 /**
  * 获取application微信配置信息
+ *
+ * @author zhengyongrui
  */
 @Data
 @ConfigurationProperties(prefix = "wx.miniapp")
@@ -16,6 +18,7 @@ public class WxMaProperties {
 
     @Data
     public static class Config {
+
         /**
          * 设置微信小程序的appid
          */

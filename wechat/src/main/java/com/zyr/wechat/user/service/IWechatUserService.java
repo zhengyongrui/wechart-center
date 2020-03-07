@@ -1,9 +1,6 @@
 package com.zyr.wechat.user.service;
 
-import com.zyr.wechat.miniapp.config.WxMaProperties;
-import com.zyr.wechat.user.domain.po.WechatUser;
-
-import java.util.List;
+import com.zyr.wechat.user.domain.vo.WechatLoginResultVo;
 
 /**
  * @Author: zhengyongrui
@@ -11,4 +8,5 @@ import java.util.List;
  */
 public interface IWechatUserService {
 
+    WechatLoginResultVo login(String appid, String code);
 }

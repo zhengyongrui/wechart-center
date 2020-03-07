@@ -5,9 +5,13 @@ import cn.binarywang.wx.miniapp.bean.WxMaJscode2SessionResult;
 import cn.binarywang.wx.miniapp.bean.WxMaPhoneNumberInfo;
 import cn.binarywang.wx.miniapp.bean.WxMaUserInfo;
 import com.zyr.wechat.miniapp.config.WxMaConfiguration;
+import com.zyr.wechat.user.domain.vo.WechatUserVo;
+import com.zyr.wechat.user.service.IWechatUserService;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.error.WxErrorException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,23 +24,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/wx/user/{appid}")
 @Slf4j
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class WxMaUserController {
+
+    private final IWechatUserService wechatUserService;
 
     /**
      * 登陆接口
      */
     @GetMapping("/login")
-    public String login(@PathVariable String appid, @NonNull String code) {
-        final WxMaService wxService = WxMaConfiguration.getMaService(appid);
-        try {
-            WxMaJscode2SessionResult session = wxService.getUserService().getSessionInfo(code);
-            log.info(session.getSessionKey());
-            log.info(session.getOpenid());
-            return session.toString();
-        } catch (WxErrorException e) {
-            log.error(e.getMessage(), e);
-            return e.toString();
-        }
+    public WechatUserVo login(@PathVariable String appid, @NonNull String code) {
+        return wechatUserService.login(appid, code);
     }
 
     /**
