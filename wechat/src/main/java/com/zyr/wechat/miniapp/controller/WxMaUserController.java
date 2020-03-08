@@ -1,16 +1,15 @@
 package com.zyr.wechat.miniapp.controller;
 
 import cn.binarywang.wx.miniapp.api.WxMaService;
-import cn.binarywang.wx.miniapp.bean.WxMaJscode2SessionResult;
 import cn.binarywang.wx.miniapp.bean.WxMaPhoneNumberInfo;
 import cn.binarywang.wx.miniapp.bean.WxMaUserInfo;
+import com.zyr.common.auth.AuthenticationNoCheck;
 import com.zyr.wechat.miniapp.config.WxMaConfiguration;
-import com.zyr.wechat.user.domain.vo.WechatUserVo;
+import com.zyr.wechat.user.domain.vo.WechatLoginResultVo;
 import com.zyr.wechat.user.service.IWechatUserService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import me.chanjar.weixin.common.error.WxErrorException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,9 +30,11 @@ public class WxMaUserController {
 
     /**
      * 登陆接口
+     * @return WechatLoginResultVo
      */
     @GetMapping("/login")
-    public WechatUserVo login(@PathVariable String appid, @NonNull String code) {
+    @AuthenticationNoCheck
+    public WechatLoginResultVo login(@PathVariable String appid, @NonNull String code) {
         return wechatUserService.login(appid, code);
     }
 

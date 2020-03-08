@@ -60,4 +60,9 @@ public class WechatUserDto {
      * 账户中心对应的用户id
      */
     private String userId;
+
+    /**
+     * 创建时间
+     */
+    private long createDate;
 }

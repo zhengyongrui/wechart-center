@@ -14,7 +14,7 @@ import java.util.Map;
  */
 @Data
 @Builder
-public class WechatUser implements Map<String, Object> {
+public class WechatUser{
 
     @Id
     private String openId;
@@ -64,5 +64,10 @@ public class WechatUser implements Map<String, Object> {
      * 账户中心对应的用户id
      */
     private String userId;
+
+    /**
+     * 创建时间
+     */
+    private long createDate;
 
 }

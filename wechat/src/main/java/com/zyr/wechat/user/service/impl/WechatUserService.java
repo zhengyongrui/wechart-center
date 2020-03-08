@@ -27,7 +27,7 @@ import java.util.Map;
 @Service
 @Slf4j
 public class WechatUserService implements IWechatUserService {
-    
+
     private final IWechatUserDao wechatUserDao;
 
     private final JwtOperator jwtOperator;
@@ -37,21 +37,44 @@ public class WechatUserService implements IWechatUserService {
         final WxMaService wxService = WxMaConfiguration.getMaService(appid);
         try {
             WxMaJscode2SessionResult session = wxService.getUserService().getSessionInfo(code);
-            String openid = session.getOpenid();
-            WechatUser wechatUser = wechatUserDao.findById(openid).orElseGet(() -> {
-                WechatUser wechatUserForSave = WechatUser.builder().openId(openid).unionId(session.getUnionid()).build();
-                wechatUserDao.save(wechatUserForSave);
-                return wechatUserForSave;
-            });
+            WechatUser wechatUser = syncAndFindWechatUser(session);
             WechatUserVo wechatUserVo = CommonBeanUtil.copyBean(wechatUser, WechatUserVo.class);
-            Map<String, Object> map = new HashMap<>();
+            Map<String, Object> map = new HashMap<>(16);
             map.put("wechatUser", wechatUserVo);
             String token = jwtOperator.generateToken(map);
             WechatLoginResultVo wechatLoginResultVo = WechatLoginResultVo.builder().token(token).wechatUserVo(wechatUserVo).build();
+            log.debug(
+                    "用户{}登录成功，生成的token = {}, 有效期到:{}",
+                    wechatUserVo.getOpenId(),
+                    token,
+                    jwtOperator.getExpirationTime()
+            );
             return wechatLoginResultVo;
         } catch (WxErrorException e) {
             log.error(e.getMessage(), e);
         }
         return null;
+    }
+
+    /**
+     * 同步和查询微信用户信息
+     * 如果没找到对应openid记录则更新同步到数据库
+     *
+     * @param wxMaJscode2SessionResult
+     * @return
+     */
+    private WechatUser syncAndFindWechatUser(WxMaJscode2SessionResult wxMaJscode2SessionResult) {
+        final String openid = wxMaJscode2SessionResult.getOpenid();
+        return wechatUserDao.findById(openid).orElseGet(() -> {
+            // todo 后面userId去账户中心新建获取
+            WechatUser wechatUserForSave = WechatUser.builder()
+                    .openId(openid)
+                    .unionId(wxMaJscode2SessionResult.getUnionid())
+                    .userId(openid)
+                    .createDate(System.currentTimeMillis())
+                    .build();
+            wechatUserDao.save(wechatUserForSave);
+            return wechatUserForSave;
+        });
     }
 }
